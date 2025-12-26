@@ -1,0 +1,12 @@
+{
+  "user_id": 1,
+  "created_at": "2025-12-26T05:35:21.503062",
+  "key_version": 1,
+  "algorithm_versions": {
+    "ntru": "NTRU-HPS-2048-509",
+    "kyber": "Kyber768",
+    "dilithium": "Dilithium3",
+    "sphincs": "SPHINCS+-SHA2-128f-simple"
+  },
+  "has_sphincs": true
+}
