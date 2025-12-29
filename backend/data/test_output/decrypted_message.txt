@@ -1,0 +1,38 @@
+======================================================================
+  DECRYPTION OUTPUT - REQUAGNIZE PQC SYSTEM
+======================================================================
+
+Generated at: 2025-12-29 10:58:35
+Encryption: NTRU-HPS-2048-509 + Kyber768 Hybrid
+Original Size: 946 bytes
+Ciphertext Size: 2775 bytes
+Verification: SUCCESS - Messages match!
+
+----------------------------------------------------------------------
+DECRYPTED MESSAGE CONTENT:
+----------------------------------------------------------------------
+
+================================================================================
+                    REQUAGNIZE - FACE AUTHENTICATION SYSTEM
+================================================================================
+
+This is a secret test message encrypted using Post-Quantum Cryptography!
+
+Algorithms Used:
+  • NTRU-HPS-2048-509: Primary Key Encapsulation Mechanism
+  • Kyber768: Secondary Key Encapsulation Mechanism
+  • AES-256-GCM: Symmetric encryption for the actual data
+
+The hybrid approach uses BOTH NTRU and Kyber to derive the symmetric key,
+providing defense-in-depth against future quantum computer attacks.
+
+Test conducted at: 2025-12-29 10:58:35
+
+Security Level: NIST Level 3 (equivalent to AES-192 classical security)
+
+This message demonstrates that the encryption and decryption process works
+correctly with the liboqs-python library.
+
+================================================================================
+
+======================================================================

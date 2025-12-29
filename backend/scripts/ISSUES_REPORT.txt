@@ -1,0 +1,195 @@
+================================================================================
+           REQUAGNIZE PROJECT - ISSUES AND ERRORS REPORT
+================================================================================
+
+Date: 2025-12-29
+Test Environment: Windows, Python 3.11.9
+
+================================================================================
+                              CRITICAL ISSUES
+================================================================================
+
+1. liboqs-python NOT INSTALLED
+   ------------------------------------------------------------------------------
+   Status: CRITICAL
+   Impact: All PQC encryption/decryption operations FAIL
+   
+   The liboqs-python library (Post-Quantum Cryptography) is NOT installed.
+   The system is running in "fallback mode" which uses RANDOM values for
+   encryption, making decryption IMPOSSIBLE.
+   
+   Evidence:
+   - WARNING: liboqs-python not installed. PQC operations will use fallback mode.
+   - NTRU Encap secret:  ff49c3286d37a48d... (random)
+   - NTRU Decap secret:  cf384775356d985c... (different random - FAILS!)
+   - Kyber Encap secret: 2b13cbaef750fa59... (random)
+   - Kyber Decap secret: d8a1d8f8ee5a9512... (different random - FAILS!)
+   
+   Root Cause (pqc_service.py):
+   The fallback implementation generates NEW random values instead of 
+   deterministically deriving them from the keys:
+   
+   ```python
+   def ntru_encapsulate(self, public_key: bytes) -> Tuple[bytes, bytes]:
+       if not self._oqs_available:
+           # Fallback: Return random values  <-- THIS IS WRONG
+           shared_secret = secrets.token_bytes(32)
+           ciphertext = secrets.token_bytes(699)
+           return ciphertext, shared_secret
+   
+   def ntru_decapsulate(self, ciphertext: bytes, secret_key: bytes) -> bytes:
+       if not self._oqs_available:
+           # Fallback: Return hash of inputs  <-- DIFFERENT from encapsulate!
+           return hashlib.sha256(ciphertext + secret_key).digest()
+   ```
+   
+   Solution Options:
+   A. Install liboqs-python (recommended):
+      - On Linux: pip install liboqs-python
+      - On Windows: Requires building from source or using WSL2
+   
+   B. Fix the fallback mode to use deterministic encryption (see below)
+
+
+2. FALLBACK MODE ENCRYPTION IS BROKEN
+   ------------------------------------------------------------------------------
+   Status: CRITICAL
+   Impact: System cannot encrypt/decrypt when liboqs is unavailable
+   
+   The fallback mode in pqc_service.py has a fundamental flaw:
+   - encapsulate() returns RANDOM shared secrets
+   - decapsulate() returns HASH of inputs
+   - These will NEVER match!
+   
+   Fix Required in backend/app/services/pqc_service.py:
+   The fallback should use deterministic encryption (e.g., store the
+   shared secret encrypted with the public key, or use classical RSA/ECC).
+
+
+3. MISSING SIGNATURE METHODS (Method Names Don't Match)
+   ------------------------------------------------------------------------------
+   Status: MEDIUM
+   Impact: Code may fail if calling wrong method names
+   
+   The test expected methods that don't exist:
+   - Expected: dilithium_sign()   -> Actual: sign_dilithium()
+   - Expected: dilithium_verify() -> Actual: verify_dilithium()
+   - Expected: sphincs_sign()     -> Actual: sign_sphincs()
+   - Expected: sphincs_verify()   -> Actual: verify_sphincs()
+   
+   Not necessarily a bug, but inconsistent naming.
+
+
+================================================================================
+                            WARNINGS (From Health Check)
+================================================================================
+
+4. PQC_MASTER_PASSWORD Not Set
+   ------------------------------------------------------------------------------
+   Status: WARNING
+   Impact: Using default password, less secure
+   
+   Environment variable PQC_MASTER_PASSWORD is not set.
+   The system uses a default password which is less secure.
+   
+   Fix: Set PQC_MASTER_PASSWORD in environment or .env file
+
+
+5. Missing Directory: data/uploads/faces
+   ------------------------------------------------------------------------------
+   Status: WARNING
+   Impact: Face uploads may fail
+   
+   The directory for storing face uploads doesn't exist.
+   
+   Fix: Create the directory:
+   mkdir -p data/uploads/faces
+
+
+6. DEBUG Mode May Be ON
+   ------------------------------------------------------------------------------
+   Status: WARNING
+   Impact: Security risk in production
+   
+   Debug mode appears to be enabled, which may expose sensitive information.
+   
+   Fix: Set DEBUG=False in production
+
+
+7. Security Module Token Issue
+   ------------------------------------------------------------------------------
+   Status: WARNING
+   Impact: Token decoding may have issues
+   
+   Health check noted: "Token decoding issue"
+
+
+================================================================================
+                          FAILED ENCRYPTION TESTS
+================================================================================
+
+Test Results (12 tests):
+   ✅ PASS: NTRU Key Generation
+   ✅ PASS: NTRU Encapsulation
+   ❌ FAIL: NTRU Encap/Decap Match (secrets don't match)
+   ❌ FAIL: NTRU Encrypt/Decrypt (InvalidTag - AES fails)
+   ✅ PASS: Kyber Key Generation
+   ✅ PASS: Kyber Encapsulation
+   ❌ FAIL: Kyber Encap/Decap Match (secrets don't match)
+   ❌ FAIL: Kyber Encrypt/Decrypt (InvalidTag - AES fails)
+   ❌ FAIL: Hybrid via PQC Service (InvalidTag)
+   ❌ FAIL: Hybrid via Hybrid Crypto Service (InvalidTag)
+   ❌ FAIL: Dilithium Sign/Verify (method not found)
+   ❌ FAIL: SPHINCS+ Sign/Verify (method not found)
+
+   Summary: 4 passed, 8 failed
+
+
+================================================================================
+                          RECOMMENDED FIXES
+================================================================================
+
+OPTION 1: Install liboqs-python (Best Solution)
+-----------------------------------------------
+If using Linux/WSL2:
+   pip install liboqs-python
+
+If using Windows native:
+   liboqs-python requires building from source. Consider using WSL2.
+
+
+OPTION 2: Fix Fallback Mode (Temporary Workaround)
+--------------------------------------------------
+Modify pqc_service.py to use deterministic fallback encryption.
+This provides basic functionality without real PQC security.
+
+The fallback should:
+1. Store the random shared secret IN the ciphertext (encrypted)
+2. Use classical encryption (AES) for the fallback
+3. OR return consistent values based on key derivation
+
+
+OPTION 3: Use Classical Cryptography Fallback
+---------------------------------------------
+When liboqs is unavailable, fall back to RSA/ECC encryption.
+This isn't quantum-safe but at least works.
+
+
+================================================================================
+                              HEALTH SUMMARY
+================================================================================
+
+From system_health_check.py:
+   ✅ Passed:   10
+   ⚠️  Warnings: 5
+   ❌ Failed:   0
+   
+   Health Score: 66.7%
+
+Note: The health check doesn't detect that encryption FAILS at runtime.
+The services "exist" but don't work correctly in fallback mode.
+
+
+================================================================================
+                              END OF REPORT
+================================================================================

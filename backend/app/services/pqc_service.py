@@ -1,11 +1,11 @@
 """
 Post-Quantum Cryptography Service
-Implements NTRU, Kyber, Dilithium, SPHINCS+ using liboqs-python
+Implements NTRU, Kyber, ML-DSA (Dilithium), SPHINCS+ using liboqs-python
 
 NIST-approved algorithms for quantum-resistant cryptography:
 - NTRU-HPS-2048-509: Primary Key Encapsulation Mechanism (KEM)
 - Kyber768: Secondary KEM for hybrid encryption
-- Dilithium3: Digital signatures (replaces HMAC-SHA256 in JWT)
+- ML-DSA-65: Digital signatures (NIST FIPS 204, formerly Dilithium3)
 - SPHINCS+-SHA2-128f-simple: Hash-based signatures for critical operations
 
 Security Level: NIST Level 3 (equivalent to AES-192)
@@ -42,7 +42,8 @@ class PQCAlgorithmConfig:
     KYBER_ALGORITHM = "Kyber768"
     
     # Digital Signature Algorithms
-    DILITHIUM_ALGORITHM = "Dilithium3"
+    # Note: Dilithium3 was renamed to ML-DSA-65 in NIST FIPS 204 standardization
+    DILITHIUM_ALGORITHM = "ML-DSA-65"
     SPHINCS_ALGORITHM = "SPHINCS+-SHA2-128f-simple"
     
     # Symmetric encryption (AES-256-GCM for data encryption)
