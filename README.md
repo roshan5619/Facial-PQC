@@ -148,21 +148,6 @@ REQUAGNIZE_PRODUCT/
 └── README.md
 ```
 
-<<<<<<< Updated upstream
-## 🔐 Post-Quantum Cryptography
-
-This system implements **NIST-approved PQC algorithms** to protect against quantum computer attacks:
-
-### Encryption Flow
-```
-Face Embedding → NTRU Encapsulation → Kyber Encapsulation
-                         ↓                    ↓
-                   shared_secret_1    shared_secret_2
-                         ↓                    ↓
-                    combined_secret = XOR(ss1, ss2)
-                              ↓
-                    AES-256-GCM Encryption
-=======
 ## 🔐 Post-Quantum Cryptography Integration
 
 This system implements **NIST-approved PQC algorithms** using the [liboqs](https://github.com/open-quantum-safe/liboqs) library to protect against future quantum computer attacks.
@@ -386,17 +371,12 @@ python scripts/system_health_check.py
 
 # Run full PQC test suite
 pytest tests/test_pqc.py -v
->>>>>>> Stashed changes
 ```
 
 ### JWT Token Format
 ```
 Classical:  header.payload.HMAC_signature
-<<<<<<< Updated upstream
-PQC:        header.payload.Dilithium_signature
-=======
 PQC:        header.payload.ML-DSA-65_signature (4627 bytes)
->>>>>>> Stashed changes
 ```
 
 ## 📊 Performance
